@@ -16,12 +16,12 @@ const fs::path current_dir = fs::current_path();
 
 // User-defined data-types
 struct CharacterStats {
-	std::string character_name;
-	std::string class_name;
-	std::string class_archetype;
-	int health;
-	int ac;
-	int speed;
+	std::string* character_line;
+	std::string* stats_line;
+	std::string* equipment_line;
+	std::string* combat_line;
+	std::string* spells_line;
+	std::string* rolls_line;
 };
 
 // @brief Checks for character file path, creates it if not present
@@ -98,6 +98,150 @@ void undo(){
 
 // @brief Save new character data to file CHARACTERS.txt
 void save_new_character(){
+	using namespace ftxui;
+
+    auto screen = ScreenInteractive::Fullscreen();
+
+	// ------------------------------------------------------------------------
+	// Character
+	// ------------------------------------------------------------------------
+        std::string name = "John";
+        std::string class_level = "Fighter 3";
+        std::string archetype = "Rune Knight";
+        std::string race = "Human";
+        std::string background = "Hobo";
+        std::string alignment = "Chaotic Neutral";
+        auto character = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Info"), vbox({
+                        flexbox({
+                            vbox({
+                                hbox({text("Name: ") | bold, text(name)}),
+                                hbox({text("Race: ") | bold, text(race)})
+                            }),
+                            filler(),
+                            vbox({
+                                hbox({text("Class: ") | bold, text(class_level)}),
+                                hbox({text("Alignment: ") | bold, text(alignment)})
+                            }),
+                            filler(),
+                            vbox({
+                                hbox({text("Archetype: ") | bold, text(archetype)}),
+                                hbox({text("Background: ") | bold, text(background)})
+                            })
+                        })
+                    })) | flex
+                }),
+                hbox({
+                    window(text("Personal Traits"), vbox({
+                        hbox({text("Personality: ") | bold, paragraph("Very happy man")}),
+                        separatorCharacter(" - "),
+                        hbox({text("Ideals: ") | bold, paragraph("Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money Money")}),
+                        separatorCharacter(" - "),
+                        hbox({text("Bonds: ") | bold, paragraph("Every man")}),
+                        separatorCharacter(" - "),
+                        hbox({text("Flaws: ") | bold, paragraph("Too many huz")})
+                    })) | flex
+                })
+            });
+        });
+
+	// ------------------------------------------------------------------------
+	// Stats
+	// ------------------------------------------------------------------------
+        auto stats = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Stats"), text("Stats data") | bold)
+                })
+            });
+        });
+
+	// ------------------------------------------------------------------------
+	// Equipment
+	// ------------------------------------------------------------------------
+        auto equipment = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Equipment"), text("Equipment data") | bold)
+                })
+            });
+        });
+
+	// ------------------------------------------------------------------------
+	// Combat
+	// ------------------------------------------------------------------------
+        auto combat = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Combat"), text("Combat data") | bold)
+                })
+            });
+        });
+
+	// ------------------------------------------------------------------------
+	// Spells
+	// ------------------------------------------------------------------------
+        auto spells = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Spells"), text("Spells data") | bold)
+                })
+            });
+        });
+
+	// ------------------------------------------------------------------------
+	// Rolls
+	// ------------------------------------------------------------------------
+        auto rolls = Renderer([&]{
+            return vbox({
+                hbox({
+                    window(text("Rolls"), text("Rolls data") | bold)
+                })
+            });
+        });
+    
+    // ------------------------------------------------------------------------
+	// Tabs
+	// ------------------------------------------------------------------------
+
+    int tab_index = 0;
+	std::vector<std::string> tab_entries = {
+		"Character", "Stats", "Equipment", "Combat", "Spells", "Rolls"
+	};
+	auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+    auto tab_content = Container::Tab({
+        character,
+        stats,
+        equipment, 
+        combat, 
+        spells, 
+        rolls
+    },
+    &tab_index);
+
+    auto exit_button = Button("Exit", [&]{screen.Exit();}, ButtonOption::Animated());
+
+    auto main_container = Container::Vertical({
+        Container::Horizontal({
+            tab_selection,
+            exit_button
+        }),
+        tab_content
+    });
+    auto main_renderer = Renderer(main_container, [&]{
+        return vbox({
+            text("DnD 5e Character Sheet TUI") | bold | hcenter,
+            hbox({
+                tab_selection->Render() | flex,
+                exit_button->Render()
+            }),
+            tab_content->Render() | flex
+        });
+    });
+
+    screen.Loop(main_renderer);
 
 	exit(EXIT_SUCCESS);
 }
@@ -189,7 +333,8 @@ CharacterStats load_character(const bool list_characters){
 // @brief Use stats data to create overall interactive character sheet with the
 // specified data
 void create_main_tui(CharacterStats& stats){
-
+	using namespace ftxui;
+	
 }
 
 int main(const int argc, const char* argv[]){
