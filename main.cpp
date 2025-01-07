@@ -59,15 +59,15 @@ std::string make_selection_menu(const std::vector<std::string>& characters){
 	return name.substr(0, name.find(':'));
 }
 
-// @brief Redo the last delete action (could be improved with keeping all deletes
+// @brief Undo the last delete action (could be improved with keeping all deletes
 // until a new character is made, then wiping file, like a stack)
-void redo(){
+void undo(){
 	const fs::path character_data_path = current_dir / "CHARACTERS.txt";
-	const fs::path redo_data_path = current_dir / "REDO.txt";
+	const fs::path undo_data_path = current_dir / "UNDO.txt";
 
-	std::ifstream redo_file(redo_data_path);
+	std::ifstream undo_file(undo_data_path);
 	std::string deleted_character_data;
-	std::getline(redo_file, deleted_character_data); redo_file.close();
+	std::getline(undo_file, deleted_character_data); undo_file.close();
 	const int removed_location = std::stoi(deleted_character_data.substr(0, deleted_character_data.find(';')));
 	deleted_character_data = deleted_character_data.substr(deleted_character_data.find(';')+1);
 
@@ -90,8 +90,8 @@ void redo(){
 	outfile_character << new_file;
 	outfile_character.close();
 
-	std::ofstream outfile_redo(redo_data_path);
-	outfile_redo.close();
+	std::ofstream outfile_undo(undo_data_path);
+	outfile_undo.close();
 
 	exit(EXIT_SUCCESS);
 }
@@ -106,7 +106,7 @@ void save_new_character(){
 CharacterStats load_character(const bool delete_character, const std::string& name_specified){
 	// Get character data line
 	const fs::path character_data_path = current_dir / "CHARACTERS.txt";
-	const fs::path redo_data_path = current_dir / "REDO.txt";
+	const fs::path undo_data_path = current_dir / "UNDO.txt";
 	std::ifstream file(character_data_path);
 	std::string line;
 	int count = -1;
@@ -140,7 +140,7 @@ CharacterStats load_character(const bool delete_character, const std::string& na
 				new_file += line2 + '\n';
 			}
 			if (line == line2){
-				std::ofstream outfile(redo_data_path, std::ios::out);
+				std::ofstream outfile(undo_data_path, std::ios::out);
 				outfile << (std::to_string(count) + ';' + line);
 				outfile.close();
 			}
@@ -195,7 +195,7 @@ void create_main_tui(CharacterStats& stats){
 int main(const int argc, const char* argv[]){
 	// make sure character file exists
 	check_path("CHARACTERS.txt");
-	check_path("REDO.txt");
+	check_path("UNDO.txt");
 	CharacterStats stats;
 
 	// Command Line Arguments
@@ -207,6 +207,9 @@ int main(const int argc, const char* argv[]){
 
 			std::cout << "usage: " << file_name << " [-h] [-c] [-d] [-l NAME]";
 			std::cout << "\n\nDescripion section";
+			std::cout << "\n\ncommands:";
+			std::cout << "\n  list\t\t\tshow all characters available to load";
+			std::cout << "\n  undo\t\t\trevert previous character deletion";
 			std::cout << "\n\noptions:";
 			std::cout << "\n  -h, --help\t\tshow help message";
 			std::cout << "\n  -c, --create\t\tcreate a new character";
@@ -216,8 +219,8 @@ int main(const int argc, const char* argv[]){
 			exit(EXIT_SUCCESS);
 		} else if (option == "list"){
 			load_character(true);
-		} else if (option == "redo"){
-			redo();
+		} else if (option == "undo"){
+			undo();
 		} else if (option == "-c" || option == "--Create"){
 			save_new_character();
 		} else if (option == "-l" || option == "-d" || option == "--load" || option == "--delete"){
@@ -234,7 +237,7 @@ int main(const int argc, const char* argv[]){
 				
 				exit(EXIT_SUCCESS);
 			} else {
-				std::cerr << "No load character NAME given";
+				std::cerr << "ERROR. No load character NAME given.";
 				exit(EXIT_FAILURE);
 			}
 		}

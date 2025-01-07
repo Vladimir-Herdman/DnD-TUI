@@ -1,6 +1,6 @@
 .DS_Store
 CHARACTERS.txt
-REDO.txt
+UNDO.txt
 test.cpp
 ideas.txt
 main
