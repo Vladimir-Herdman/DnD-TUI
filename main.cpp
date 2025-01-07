@@ -14,8 +14,11 @@ namespace fs = std::filesystem;
 // Globals
 const fs::path character_data_path = fs::current_path() / "CHARACTERS.txt";
 
-// User-defined section
+// User-defined data-types
 struct CharacterStats {
+	std::string character_name;
+	std::string class_name;
+	std::string class_archetype;
 	int health;
 	int ac;
 	int speed;
@@ -38,7 +41,7 @@ void save_new_character(){
 }
 
 // @brief Loads/deletes specified character name
-CharacterStats load_character(const bool delete_character, const std::string name_specified){
+CharacterStats load_character(const bool delete_character, const std::string& name_specified){
 	// Get character data line
 	std::ifstream file(character_data_path);
 	std::string line;
@@ -75,10 +78,9 @@ CharacterStats load_character(const bool delete_character, const std::string nam
 		outfile << new_file;
         outfile.close();
 
-		std::cout << "Deleted character " << name_specified; // REMOVE
-
-		exit(EXIT_SUCCESS);
-	}	std::cout << "Character found, here is data: " << line;//REMOVE
+		CharacterStats stats;
+		return stats;
+	}
 
 	// Use current character data line to fill stats
 	CharacterStats stats;
@@ -86,8 +88,9 @@ CharacterStats load_character(const bool delete_character, const std::string nam
 	return stats;
 }
 
-// @brief Opens load TUI to get character data from a file
-CharacterStats load_character(){
+// @brief Opens load TUI to get character data from a file, or shows characters
+// that can be choosen
+CharacterStats load_character(const bool list_characters){
 	// Get characters to choose from
 	std::vector<std::string> characters;
 
@@ -95,17 +98,32 @@ CharacterStats load_character(){
 	std::string line;
 	while (std::getline(file, line)){
 		int delimiter_spot = line.find_first_of(";");
-		characters.push_back(line.substr(0, delimiter_spot));
+		std::string name = line.substr(0, delimiter_spot);
+		std::string rest_of_line = line.substr(delimiter_spot+1);
+		std::string class_name = rest_of_line.substr(0, rest_of_line.find_first_of(";"));
+		characters.push_back(name + ": " + class_name);
+		if (list_characters){
+			std::cout << "  - " << name << ": " << class_name << "\n";
+		}
 	} file.close();
-	
-	CharacterStats stats;
 
-	return stats;
+	if (list_characters){exit(EXIT_SUCCESS);}
+
+	// Create interactive TUI session to choose character to play as
+	const std::string name_specified;  //FIX - Choosen name from interactive above, return data from load character with name specified;
+	return load_character(false, name_specified);
+}
+
+// @brief Use stats data to create overall interactive character sheet with the
+// specified data
+void create_main_tui(CharacterStats& stats){
+
 }
 
 int main(const int argc, const char* argv[]){
 	// make sure character file exists
 	check_character_path();
+	CharacterStats stats;
 
 	// Command Line Arguments
 	if (argc > 1){
@@ -123,6 +141,8 @@ int main(const int argc, const char* argv[]){
 			std::cout << "\n  -l, --load NAME\tskip choosing screen and load specified character";
 
 			exit(EXIT_SUCCESS);
+		} else if (option == "list"){
+			load_character(true);
 		} else if (option == "-c" || option == "--Create"){
 			save_new_character();
 		} else if (option == "-l" || option == "-d" || option == "--load" || option == "--delete"){
@@ -134,7 +154,8 @@ int main(const int argc, const char* argv[]){
 					std::string rest_of_name = argv[i];
 					name_specified += " " + rest_of_name;
 				}
-				load_character(delete_character, name_specified);
+				stats = load_character(delete_character, name_specified);
+				create_main_tui(stats);
 				
 				exit(EXIT_SUCCESS);
 			} else {
@@ -146,7 +167,8 @@ int main(const int argc, const char* argv[]){
 	
 	// Get Character Stats
 		// Health, AC, Speed
-	CharacterStats stats = load_character();
+	stats = load_character(false);
+	create_main_tui(stats);
 
 	return EXIT_SUCCESS;
 }
